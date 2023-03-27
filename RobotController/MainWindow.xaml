@@ -1,0 +1,24 @@
+﻿<Window x:Class="RobotController.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RobotController"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="548" Width="584">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="94*"/>
+            <ColumnDefinition Width="45*"/>
+            <ColumnDefinition Width="261*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="Button1" Content="Button1" HorizontalAlignment="Left" Margin="34,84,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button1_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="Button2" Content="Button2" HorizontalAlignment="Left" Margin="34,137,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button2_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="Button3" Content="Button3" HorizontalAlignment="Left" Margin="34,193,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button3_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="Button4" Content="Button4" HorizontalAlignment="Left" Margin="34,250,0,0" VerticalAlignment="Top" Width="98" Height="38" Click="Button4_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="Button5" Content="Button5" HorizontalAlignment="Left" Margin="34,306,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button5_Click" Grid.ColumnSpan="2"/>
+        <Button x:Name="OpenPort" Content="Open" HorizontalAlignment="Left" Margin="22,36,0,0" VerticalAlignment="Top" Height="22" Width="49" Grid.Column="1" Click="OpenPort_Click" RenderTransformOrigin="-0.17,0.684" Grid.ColumnSpan="2"/>
+        <ComboBox x:Name="PortList" HorizontalAlignment="Left" Margin="34,36,0,0" VerticalAlignment="Top" Width="120" Grid.ColumnSpan="3"/>
+        <Button x:Name="Button1_Copy" Content="Button1" HorizontalAlignment="Left" Margin="79,33,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button1_Click" Grid.Column="2"/>
+    </Grid>
+</Window>
