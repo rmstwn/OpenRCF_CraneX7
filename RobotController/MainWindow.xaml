@@ -19,6 +19,5 @@
         <Button x:Name="Button5" Content="Button5" HorizontalAlignment="Left" Margin="34,306,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button5_Click" Grid.ColumnSpan="2"/>
         <Button x:Name="OpenPort" Content="Open" HorizontalAlignment="Left" Margin="22,36,0,0" VerticalAlignment="Top" Height="22" Width="49" Grid.Column="1" Click="OpenPort_Click" RenderTransformOrigin="-0.17,0.684" Grid.ColumnSpan="2"/>
         <ComboBox x:Name="PortList" HorizontalAlignment="Left" Margin="34,36,0,0" VerticalAlignment="Top" Width="120" Grid.ColumnSpan="3"/>
-        <Button x:Name="Button1_Copy" Content="Button1" HorizontalAlignment="Left" Margin="79,33,0,0" VerticalAlignment="Top" Width="98" Height="39" Click="Button1_Click" Grid.Column="2"/>
     </Grid>
 </Window>

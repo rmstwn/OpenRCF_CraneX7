@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 using static OpenRCF.SerialDevice;
 using static OpenRCF.Mobile;
 using System.IO.Ports;
+using SharpDX.XInput;
+
+using GamepadButtonFlags = SharpDX.XInput.GamepadButtonFlags;
 
 namespace RobotController   
 {
@@ -31,14 +34,14 @@ namespace RobotController
         byte[] ID0209 = new byte[8] { 2, 3, 4, 5, 6, 7, 8, 9 };
         //byte[] ID0209 = new byte[4] { 11, 12, 13, 14};
 
-        //Thread thread1 = new Thread(ThreadWork.DoWork);
-        //Thread thread2 = new Thread(ThreadWork.DoWork2);
-        //Thread thread5 = new Thread(ThreadWork.StopWork
-        
+       
         public MainWindow()
         {
             InitializeComponent();
             Loaded += InitializeOpenRCF;
+
+            Joystick.ButtonEvent[GamepadButtonFlags.A] = GetJoystick;
+            Joystick.ButtonEvent[GamepadButtonFlags.DPadLeft] = GetJoystick2;
 
             string[] ports = SerialPort.GetPortNames();
 
@@ -178,7 +181,7 @@ namespace RobotController
             }
 
             Parallel.RunEndless(DyWritePos, 50);
-
+            Parallel.RunEndless(Joystick.Main, 50);
         }
 
         void InitializeOpenRCF(object sender, RoutedEventArgs e)
@@ -244,6 +247,16 @@ namespace RobotController
             }
         }
 
+        public void GetJoystick()
+        {
+            Console.WriteLine("A");
+        }
+
+        public void GetJoystick2()
+        {
+            Console.WriteLine("Left");
+        }
+
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
             //thread1.Start();
@@ -267,22 +280,24 @@ namespace RobotController
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
             DyWrPoSW = true;
-        }
 
-        private void Button4_Click(object sender, RoutedEventArgs e)
-        {
             CRANE_X7.Trajectory.ProceedOutboundLine();
             CRANE_X7.Trajectory.SpeedRatio = 1;
 
             Parallel.Run(CRANE_X7.Trajectory.ProceedOutboundLine, 50);
         }
 
-        private void Button5_Click(object sender, RoutedEventArgs e)
+        private void Button4_Click(object sender, RoutedEventArgs e)
         {
             CRANE_X7.Trajectory.ProceedInboundLine();
             CRANE_X7.Trajectory.SpeedRatio = 1;
 
             Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
+        }
+
+        private void Button5_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
     }

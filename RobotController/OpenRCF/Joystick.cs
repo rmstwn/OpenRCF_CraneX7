@@ -1,38 +1,56 @@
-﻿using OpenRCF;
-using OpenTK.Input;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpDX.XInput;
 using static System.Windows.Forms.AxHost;
-using System.Threading;
 using static OpenRCF.RobotObject;
 using static OpenRCF.Mobile;
 using static OpenRCF.SerialDevice;
-using System.IO.Ports;
+
+using System.Threading;
+using System.Windows.Controls.Primitives;
 
 namespace OpenRCF
 {
-    public class Joystick
+    public static class Joystick
     {
-        static void Main()
+        public static Dictionary<GamepadButtonFlags, Action> ButtonEvent = new Dictionary<GamepadButtonFlags, Action>()
         {
-            double[] TargetOdom = { 0, 0, 0 };
-            double[] vel = { 0, 0, 0, 0 };
-            int[] TargetVel = { 0, 0, 0, 0 };
-            int[] CurrentVel = { 0, 0, 0, 0 };
+            { GamepadButtonFlags.A, () => { } },
+            { GamepadButtonFlags.B, () => { } },
+            { GamepadButtonFlags.X, () => { } },
+            { GamepadButtonFlags.Y, () => { } },
+            { GamepadButtonFlags.DPadUp, () => { } },
+            { GamepadButtonFlags.DPadDown, () => { } },
+            { GamepadButtonFlags.DPadLeft, () => { } },
+            { GamepadButtonFlags.DPadRight, () => { } },
+            { GamepadButtonFlags.Start, () => { } },
+            { GamepadButtonFlags.Back, () => { } },
+            { GamepadButtonFlags.RightShoulder, () => { } },
+            { GamepadButtonFlags.LeftShoulder, () => { } }
+        };
 
-            SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
+        public static Dictionary<Thumb, short[]> ThumbEvent = new Dictionary<Thumb, short[]>()
+        {
 
-            byte[] id = new byte[4] { 13, 12, 14, 11 }; //Mecanum
-            //byte[] id = new byte[4] { 11, 12, 13, 14 }; //Omni
+        }
 
-            Dynamixel.PortOpen("COM6");
-            Dynamixel.TorqueEnable(id);
+        public static void Main()
+        {
+            //double[] TargetOdom = { 0, 0, 0 };
+            //double[] vel = { 0, 0, 0, 0 };
+            //int[] TargetVel = { 0, 0, 0, 0 };
+            //int[] CurrentVel = { 0, 0, 0, 0 };
 
-            MobileInfo MobileInfo = new MobileInfo();
+            //SerialDevice.Dynamixel Dynamixel = new SerialDevice.Dynamixel(1000000);
+
+            //byte[] id = new byte[4] { 13, 12, 14, 11 }; //Mecanum
+            ////byte[] id = new byte[4] { 11, 12, 13, 14 }; //Omni
+
+            //Dynamixel.PortOpen("COM6");
+            //Dynamixel.TorqueEnable(id);
+
+            //MobileInfo MobileInfo = new MobileInfo();
+
             JointState JointState = new JointState();
 
             Console.WriteLine("Start XGamepadApp");
@@ -64,56 +82,111 @@ namespace OpenRCF
                 var previousState = controller.GetState();
                 while (controller.IsConnected)
                 {
-                    //if (IsKeyPressed(ConsoleKey.Escape))
-                    //{
-                    //    break;
-                    //}
-                    var state = controller.GetState();
-                    //if (previousState.PacketNumber != state.PacketNumber)
 
-                    switch (state.Gamepad.Buttons)
+                    if (IsKeyPressed(ConsoleKey.Escape))
+                    {
+                        break;
+                    }
+                    var state = controller.GetState();
+
+                    switch (state.Gamepad.Buttons) 
                     {
                         case GamepadButtonFlags.A:
-                            Mobile.Mecanum.MovePos(Dynamixel, id, 1000000, 0.1, new double[] { 1, 1, 0 });
+                            ButtonEvent[GamepadButtonFlags.A].Invoke();
+                            break;
+                        case GamepadButtonFlags.B:
+                            ButtonEvent[GamepadButtonFlags.B].Invoke();
+                            break;
+                        case GamepadButtonFlags.X:
+                            ButtonEvent[GamepadButtonFlags.X].Invoke();
+                            break;
+                        case GamepadButtonFlags.Y:
+                            ButtonEvent[GamepadButtonFlags.X].Invoke();
                             break;
                         case GamepadButtonFlags.DPadUp:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.43, 0.43, 0 });
+                            ButtonEvent[GamepadButtonFlags.DPadUp].Invoke();
                             break;
                         case GamepadButtonFlags.DPadDown:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { -0.43, 0, 0 });
+                            ButtonEvent[GamepadButtonFlags.DPadDown].Invoke();
                             break;
                         case GamepadButtonFlags.DPadLeft:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, 0.43, 0 });
+                            ButtonEvent[GamepadButtonFlags.DPadLeft].Invoke();
                             break;
                         case GamepadButtonFlags.DPadRight:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, -0.43, 0 });
+                            ButtonEvent[GamepadButtonFlags.DPadRight].Invoke();
                             break;
-                        case GamepadButtonFlags.LeftShoulder:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, 0.214, 0 });
+                        case GamepadButtonFlags.Start:
+                            ButtonEvent[GamepadButtonFlags.Start].Invoke();
+                            break;
+                        case GamepadButtonFlags.Back:
+                            ButtonEvent[GamepadButtonFlags.Back].Invoke();
                             break;
                         case GamepadButtonFlags.RightShoulder:
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, -0.214, 0 });
+                            ButtonEvent[GamepadButtonFlags.RightShoulder].Invoke();
                             break;
-                        default:
-
-                            TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -0.43, 0.43);
-                            TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, 0.43, -0.43);
-                            TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -0.6, 0.6);
-
-                            if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
-                            if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
-                            if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
-
-                            Mobile.Mecanum.Move(Dynamixel, id, 1000000, TargetOdom);
-
+                        case GamepadButtonFlags.LeftShoulder:
+                            ButtonEvent[GamepadButtonFlags.LeftShoulder].Invoke();
                             break;
                     }
 
-                    Thread.Sleep(40);
+                    Console.WriteLine(state.Gamepad.LeftThumbX);
+
+                    //if (previousState.PacketNumber != state.PacketNumber)
+                    //    Console.WriteLine(state.Gamepad
+
+                    //Console.WriteLine(state.Gamepad.Buttons);
+
+                    //switch (state.Gamepad.Buttons)
+                    //{
+                    //    case GamepadButtonFlags.A:
+                    //        //Mobile.Mecanum.MovePos(Dynamixel, id, 1000000, 0.1, new double[] { 1, 1, 0 });
+                    //        //Console.WriteLine("Test");
+                    //        GamepadButtonFlags.A;
+                    //        break;
+                    //        //    case GamepadButtonFlags.DPadUp:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.43, 0.43, 0 });
+                    //        //        break;
+                    //        //    case GamepadButtonFlags.DPadDown:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { -0.43, 0, 0 });
+                    //        //        break;
+                    //        //    case GamepadButtonFlags.DPadLeft:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, 0.43, 0 });
+                    //        //        break;
+                    //        //    case GamepadButtonFlags.DPadRight:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0, -0.43, 0 });
+                    //        //        break;
+                    //        //    case GamepadButtonFlags.LeftShoulder:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, 0.214, 0 });
+                    //        //        break;
+                    //        //    case GamepadButtonFlags.RightShoulder:
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, new double[] { 0.214, -0.214, 0 });
+                    //        //        break;
+                    //        //    default:
+
+                    //        //        state.Gamepad.Buttons
+
+                    //        //        TargetOdom[0] = map(state.Gamepad.LeftThumbY, -32768, 32767, -0.43, 0.43);
+                    //        //        TargetOdom[1] = map(state.Gamepad.LeftThumbX, -32768, 32767, 0.43, -0.43);
+                    //        //        TargetOdom[2] = map(state.Gamepad.RightThumbX, -32768, 32767, -0.6, 0.6);
+
+                    //        //        if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
+                    //        //        if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
+                    //        //        if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
+
+                    //        //        Mobile.Mecanum.Move(Dynamixel, id, 1000000, TargetOdom);
+
+                    //        //        break;
+                    //        //}
+
+                    Thread.Sleep(10);
                     previousState = state;
                 }
             }
             Console.WriteLine("End XGamepadApp");
+        }
+        public static void GetJoystickRun()
+        {
+            Console.WriteLine("Test");
         }
 
         public static bool IsKeyPressed(ConsoleKey key)
