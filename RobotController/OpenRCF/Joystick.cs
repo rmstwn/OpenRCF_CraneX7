@@ -29,12 +29,20 @@ namespace OpenRCF
             { GamepadButtonFlags.LeftShoulder, () => { } }
         };
 
-        public static Dictionary<Thumb, short[]> ThumbEvent = new Dictionary<Thumb, short[]>()
+        public static Dictionary<Gamepad, short[]> AnalogEvent = new Dictionary<Gamepad, short[]>()
         {
 
+        };
+
+        public class Data
+        {
+            public static short LeftThumbX;
+            public static short LeftThumbY;
+            public static short RightThumbX;
+            public static short RightThumbY;
         }
 
-        public static void Main()
+        public static void GetJoystick()
         {
             //double[] TargetOdom = { 0, 0, 0 };
             //double[] vel = { 0, 0, 0, 0 };
@@ -129,7 +137,12 @@ namespace OpenRCF
                             break;
                     }
 
-                    Console.WriteLine(state.Gamepad.LeftThumbX);
+                    Data.LeftThumbX = state.Gamepad.LeftThumbX;
+                    Data.LeftThumbY = state.Gamepad.LeftThumbY;
+                    Data.RightThumbX = state.Gamepad.RightThumbX;
+                    Data.RightThumbY = state.Gamepad.RightThumbY;
+
+                    //Console.WriteLine(state.Gamepad.LeftThumbX);
 
                     //if (previousState.PacketNumber != state.PacketNumber)
                     //    Console.WriteLine(state.Gamepad
