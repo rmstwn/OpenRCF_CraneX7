@@ -59,7 +59,7 @@ namespace OpenRCF
 
             //MobileInfo MobileInfo = new MobileInfo();
 
-            JointState JointState = new JointState();
+            //JointState JointState = new JointState();
 
             Console.WriteLine("Start XGamepadApp");
             

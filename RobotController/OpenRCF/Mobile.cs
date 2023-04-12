@@ -232,11 +232,13 @@ namespace OpenRCF
                 vel[3] = CurrentVel[3];
 
                 MobileInfo = ForwardKinematics(vel);
-
                 CurrentVel = Dynamixel.Velocity(DxlId);
 
+                Thread.Sleep(10);
+
                 //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, vel[0]);
-                Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+                //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+                //Console.WriteLine("TVelocity:{0}, TVelocity:{1}, TVelocity:{2}, TVelocity:{3}", TargetVel[0], TargetVel[1], TargetVel[2], TargetVel[3]);
                 //Console.WriteLine(state.Gamepad);
             }
 
@@ -519,11 +521,13 @@ namespace OpenRCF
                 vel[3] = CurrentVel[3];
 
                 MobileInfo = ForwardKinematics(vel);
-
                 CurrentVel = Dynamixel.Velocity(DxlId);
 
+                Thread.Sleep(10);
+
                 //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, vel[0]);
-                Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+                //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
+                //Console.WriteLine("TVelocity:{0}, TVelocity:{1}, TVelocity:{2}, TVelocity:{3}", TargetVel[0], TargetVel[1], TargetVel[2], TargetVel[3]);
                 //Console.WriteLine(state.Gamepad);
             }
 
