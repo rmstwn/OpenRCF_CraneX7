@@ -35,7 +35,9 @@ namespace RobotController
         public uint BW2 = 2;
 
         float[] TargetPosByJoystick = new float[3] {0, 0, 0};
+        float[] ClampedTarget = new float[3] { 0, 0, 0 };
         float[] HomeEoEPos = new float[3] { 0, 0, 0 };
+        float[] CurrentEoEPos = new float[3] { 0, 0, 0 };
 
         Simulator Simulator = new Simulator();
 
@@ -63,6 +65,9 @@ namespace RobotController
         {
             InitializeComponent();
             Loaded += InitializeOpenRCF;
+
+            Joystick.ButtonEvent[GamepadButtonFlags.A] = TorqueOn;
+            Joystick.ButtonEvent[GamepadButtonFlags.Y] = TorqueOff;
 
             Joystick.ButtonEvent[GamepadButtonFlags.RightShoulder] = OpenGripper;
             Joystick.ButtonEvent[GamepadButtonFlags.LeftShoulder] = CloseGripper;
@@ -102,9 +107,9 @@ namespace RobotController
 
             // CRANEX7.SetPlanarJoint3DOF(0.25f, 0.25f, 0.1f);
 
-            CRANE_X7.Kinematics.BasePosition[0] = -0.5f;
-            CRANE_X7.Kinematics.BasePosition[1] = -0.25f;
-            CRANE_X7.Kinematics.BasePosition[2] = 0.5f;
+            CRANE_X7.Kinematics.BasePosition[0] = 0f;
+            CRANE_X7.Kinematics.BasePosition[1] = 0f;
+            CRANE_X7.Kinematics.BasePosition[2] = 0f;
 
             CRANE_X7[1, 0].lInit.Set = new float[3] { 0, 0, 0 };
             CRANE_X7[1, 0].axisInit.SetUnitVectorZ();
@@ -230,6 +235,10 @@ namespace RobotController
             HomeEoEPos[1] = CRANE_X7.Kinematics.Chain[1].pe[1];
             HomeEoEPos[2] = CRANE_X7.Kinematics.Chain[1].pe[2];
 
+            TargetPosByJoystick[0] = HomeEoEPos[0];
+            TargetPosByJoystick[1] = HomeEoEPos[1];
+            TargetPosByJoystick[2] = HomeEoEPos[2];
+
             Parallel.RunEndless(DyWritePos, 50);
             Parallel.RunEndless(SetTargetByJoystick, 50);
             //Parallel.RunEndless(SetMobileTargetByJoystick, 50);
@@ -335,46 +344,53 @@ namespace RobotController
         {
             CRANE_X7.Kinematics.ForwardKinematics();
 
-            //TargetPosByJoystick[0] = TargetPosByJoystick[0] + HomeEoEPos[0];
-            //TargetPosByJoystick[1] = TargetPosByJoystick[1] + HomeEoEPos[1];
-            //TargetPosByJoystick[2] = TargetPosByJoystick[2] + HomeEoEPos[2];
+            //TargetPosByJoystick[0] = TargetPosByJoystick[0] + (float)map(Joystick.Data.LeftThumbX, -32768, 32767, -0.03, 0.03);
+            //TargetPosByJoystick[1] = TargetPosByJoystick[1] + (float)map(Joystick.Data.LeftThumbY, -32768, 32767, -0.03, 0.03);
+            //TargetPosByJoystick[2] = TargetPosByJoystick[2] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, -0.03, 0.03);
 
-            EuclideanDistance = Math.Round(Math.Sqrt(Math.Pow(CRANE_X7.Kinematics.Target[1].Position[0] - HomeEoEPos[0], 2) + Math.Pow(CRANE_X7.Kinematics.Target[1].Position[1] - HomeEoEPos[1], 2) + Math.Pow(CRANE_X7.Kinematics.Target[1].Position[2] - HomeEoEPos[2], 2)), 2);
-            
-            Console.Write("EuDist = {0} , {1} || ", EuclideanDistance, EuclideanDistanceBefore);
+            //EuclideanDistance = Math.Round(Math.Sqrt(Math.Pow(TargetPosByJoystick[0] - HomeEoEPos[0], 2) + Math.Pow(TargetPosByJoystick[1] - HomeEoEPos[1], 2) + Math.Pow(TargetPosByJoystick[2] - HomeEoEPos[2], 2)), 2);
 
+            //Console.Write("EuDist = {0} , {1} || ", EuclideanDistance, EuclideanDistanceBefore);
 
-            TargetPosByJoystick[0] = 
+            //if (EuclideanDistance > 0.4)
+            //{
+            //    CRANE_X7.Kinematics.Target[1].Position[0] = CRANE_X7.Kinematics.Target[1].Position[0];
+            //    CRANE_X7.Kinematics.Target[1].Position[1] = CRANE_X7.Kinematics.Target[1].Position[1];
+            //    CRANE_X7.Kinematics.Target[1].Position[2] = CRANE_X7.Kinematics.Target[1].Position[2];
 
+            //}
+            //else
+            //{
+            //    CRANE_X7.Kinematics.Target[1].Position[0] = TargetPosByJoystick[0];
+            //    CRANE_X7.Kinematics.Target[1].Position[1] = TargetPosByJoystick[1];
+            //    CRANE_X7.Kinematics.Target[1].Position[2] = TargetPosByJoystick[2];
+            //}
 
-            if (EuclideanDistance < 0.4)
-            {
-           
-            }
-            else if (EuclideanDistance > 0.4)
-            {
-                if (EuclideanDistanceBefore < EuclideanDistance)
-                {
-                    TargetPosByJoystick[0] = TargetPosByJoystick[0];
-                    TargetPosByJoystick[1] = TargetPosByJoystick[1];
-                    TargetPosByJoystick[2] = TargetPosByJoystick[2];
-                }
-                else
-                {
-                    TargetPosByJoystick[0] = TargetPosByJoystick[0] + (float)map(Joystick.Data.LeftThumbX, -32768, 32767, -0.03, 0.03);
-                    TargetPosByJoystick[1] = TargetPosByJoystick[1] + (float)map(Joystick.Data.LeftThumbY, -32768, 32767, -0.03, 0.03);
-                    TargetPosByJoystick[2] = TargetPosByJoystick[2] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, -0.03, 0.03);
-                }
+            TargetPosByJoystick[0] = TargetPosByJoystick[0] + (float)map(Joystick.Data.LeftThumbX, -32768, 32767, 0.03, -0.03);
+            TargetPosByJoystick[1] = TargetPosByJoystick[1] + (float)map(Joystick.Data.LeftThumbY, -32768, 32767, 0.03, -0.03);
+            TargetPosByJoystick[2] = TargetPosByJoystick[2] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, -0.03, 0.03);
 
-            }
-            CRANE_X7.Kinematics.Target[1].Position[0] = TargetPosByJoystick[0] + HomeEoEPos[0];
-            CRANE_X7.Kinematics.Target[1].Position[1] = TargetPosByJoystick[1] + HomeEoEPos[1];
-            CRANE_X7.Kinematics.Target[1].Position[2] = TargetPosByJoystick[2] + HomeEoEPos[2];
+            //CurrentEoEPos[0] = TargetPosByJoystick[0] - HomeEoEPos[0];
+            //CurrentEoEPos[1] = TargetPosByJoystick[1] - HomeEoEPos[1];
+            //CurrentEoEPos[2] = TargetPosByJoystick[2] - HomeEoEPos[2];
+
+            ClampedTarget = ClampTarget(TargetPosByJoystick, 1);
+
+            CRANE_X7.Kinematics.Target[1].Position[0] = ClampedTarget[0];
+            CRANE_X7.Kinematics.Target[1].Position[1] = ClampedTarget[1];
+            CRANE_X7.Kinematics.Target[1].Position[2] = ClampedTarget[2];
+
+            //CRANE_X7.Kinematics.Target[1].Position[0] = TargetPosByJoystick[0];
+            //CRANE_X7.Kinematics.Target[1].Position[1] = TargetPosByJoystick[1];
+            //CRANE_X7.Kinematics.Target[1].Position[2] = TargetPosByJoystick[2];
 
             //CRANE_X7.Kinematics.Target[1].Position.SetPlus(TargetPosByJoystick);
 
             //Console.WriteLine(map(Joystick.Data.LeftThumbX, -32768, 32767, -0.5, 0.5));
             //Console.WriteLine(TargetPosByJoystick[0] + (float)(map(Joystick.Data.LeftThumbX, -32768, 32767, -0.5, 0.5)));
+
+            Console.Write("{0}, {1}, {2} || ", ClampedTarget[0], ClampedTarget[1], ClampedTarget[2]);
+            Console.WriteLine("{0}, {1}, {2}", TargetPosByJoystick[0], TargetPosByJoystick[1], TargetPosByJoystick[2]);
 
             CRANE_X7.Kinematics.InverseKinematics();
 
@@ -385,11 +401,11 @@ namespace RobotController
                 CommandPos[i] = (int)CRANE_X7_DXL.rad2DyAngle4servo(CRANE_X7[1, i].q);
             }
 
-            for (byte i = 0; i < (byte)(CRANEX7_8_OpenRCF - 1); i++)
-            {
-                Console.Write("{0},", CommandPos[i]);
-            }
-            Console.WriteLine("{0}", CommandPos[CRANEX7_8_OpenRCF - 1]);
+            //for (byte i = 0; i < (byte)(CRANEX7_8_OpenRCF - 1); i++)
+            //{
+            //    Console.Write("{0},", CommandPos[i]);
+            //}
+            //Console.WriteLine("{0}", CommandPos[CRANEX7_8_OpenRCF - 1]);
 
             if (EuclideanDistanceBefore != EuclideanDistance) EuclideanDistanceBefore = EuclideanDistance;
         }
@@ -417,6 +433,44 @@ namespace RobotController
         public void CloseGripper()
         {
             CRANE_X7_DXL.WritePosition(ID0209[7], (int)CRANE_X7_DXL.rad2DyAngle4servo(0));
+        }
+
+        public void TorqueOn()
+        {
+            DyWrPoSW = true;
+            CRANE_X7_DXL.TorqueEnable(ID0209);
+            TorqueON = true;
+        }
+
+        public void TorqueOff()
+        {
+            DyWrPoSW = false;
+            CRANE_X7_DXL.TorqueDisable(ID0209);
+            TorqueON = false;
+        }
+
+        public float[] ClampTarget(float[] dS, double dSclamp)
+        {
+            float[] dT = new float[3];
+
+            float normSq = (dS[0] * dS[0]) + (dS[1] * dS[1]) + (dS[2] * dS[2]);
+
+            if (normSq > (dSclamp * dSclamp))
+            {
+                float factor = (float)(dSclamp / Math.Sqrt(normSq));
+
+                dT[0] = dS[0] * factor;
+                dT[1] = dS[1] * factor;
+                dT[2] = dS[2] * factor;
+            }
+            else
+            {
+                dT[0] = dS[0];
+                dT[1] = dS[1];
+                dT[2] = dS[2];
+            }
+
+            return dT;
         }
 
         public static double map(double x, double in_min, double in_max, double out_min, double out_max)
@@ -471,18 +525,14 @@ namespace RobotController
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
             DyWrPoSW = true;
-
             CRANE_X7_DXL.TorqueEnable(ID0209);
-
             TorqueON = true;
         }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
             DyWrPoSW = false;
-
             CRANE_X7_DXL.TorqueDisable(ID0209);
-
             TorqueON = false;
         }
     }

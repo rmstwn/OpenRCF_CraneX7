@@ -109,7 +109,7 @@ namespace OpenRCF
                             ButtonEvent[GamepadButtonFlags.X].Invoke();
                             break;
                         case GamepadButtonFlags.Y:
-                            ButtonEvent[GamepadButtonFlags.X].Invoke();
+                            ButtonEvent[GamepadButtonFlags.Y].Invoke();
                             break;
                         case GamepadButtonFlags.DPadUp:
                             ButtonEvent[GamepadButtonFlags.DPadUp].Invoke();
