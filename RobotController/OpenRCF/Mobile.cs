@@ -528,6 +528,7 @@ namespace OpenRCF
                 //Console.WriteLine("RawX:{0}, VelX:{1}", state.Gamepad.LeftThumbX, vel[0]);
                 //Console.WriteLine("Velocity:{0}, Velocity:{1}, Velocity:{2}, Velocity:{3}", CurrentVel[0], CurrentVel[1], CurrentVel[2], CurrentVel[3]);
                 //Console.WriteLine("TVelocity:{0}, TVelocity:{1}, TVelocity:{2}, TVelocity:{3}", TargetVel[0], TargetVel[1], TargetVel[2], TargetVel[3]);
+                //Console.WriteLine("TargetOdom:{0}, TargetOdom:{1}, TargetOdom:{2}", TargetOdom[0], TargetOdom[1], TargetOdom[2]);
                 //Console.WriteLine(state.Gamepad);
             }
 
@@ -589,7 +590,6 @@ namespace OpenRCF
                     vel[2] = CurrentVel[2] * 0.229;
                     vel[3] = CurrentVel[3] * 0.229;
 
-
                     Mobile = ForwardKinematics(vel);
 
                     if (TargetOdom[0] < 0.01 && TargetOdom[0] > -0.01) TargetOdom[0] = 0;
@@ -627,6 +627,13 @@ namespace OpenRCF
                 }
             }
         }
+
+        public static double map(double x, double in_min, double in_max, double out_min, double out_max)
+        {
+            if (x == 128) return 0;
+            else return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+        }
+
     }
 
     //public class Mobile
