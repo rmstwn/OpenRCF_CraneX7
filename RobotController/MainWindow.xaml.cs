@@ -1,6 +1,7 @@
 ﻿using OpenRCF;
 using System;
 using System.IO.Ports;
+using System.Security.AccessControl;
 using System.Windows;
 using GamepadButtonFlags = SharpDX.XInput.GamepadButtonFlags;
 using Vector = OpenRCF.Vector;
@@ -22,6 +23,9 @@ namespace RobotController
         public bool DyWrPoSW = false; //DynamixelWritePositionSwitch
         public bool CraneX7Connected = false; //CraneX7 Connected
 
+
+        public bool MoveMobileManual = false; //Set 
+
         public static uint CRANEX7_8_OpenRCF = 7; //8
         public uint BW = 3;
         public uint BW2 = 2;
@@ -36,6 +40,8 @@ namespace RobotController
         Robot CRANE_X7 = new Robot(new uint[2] { 3, CRANEX7_8_OpenRCF }); // old 3
 
         SerialDevice.Dynamixel CRANE_X7_DXL = new SerialDevice.Dynamixel(1000000);
+        //string CRANE_X7_Port = "COM7"; //MiniPC
+        string CRANE_X7_Port = "COM4"; //Laptop
         byte[] ID0209 = new byte[8] { 2, 3, 4, 5, 6, 7, 8, 9 };
         int[] angles = new int[8];
 
@@ -68,17 +74,23 @@ namespace RobotController
             //Cuboid.Position[2] = 0.31f;
 
             Joystick.ButtonEvent[GamepadButtonFlags.A] = TorqueOn;
-            Joystick.ButtonEvent[GamepadButtonFlags.Y] = TorqueOff;
+            //Joystick.ButtonEvent[GamepadButtonFlags.Y] = TorqueOff;
+            Joystick.ButtonEvent[GamepadButtonFlags.Y] = CloseGripperFull;
 
             Joystick.ButtonEvent[GamepadButtonFlags.RightShoulder] = OpenGripper;
-            Joystick.ButtonEvent[GamepadButtonFlags.LeftShoulder] = CloseGripper;
-            //Joystick.ButtonEvent[GamepadButtonFlags.DPadLeft] = GetJoystick2;
+            Joystick.ButtonEvent[GamepadButtonFlags.LeftShoulder] = CloseGripperBall;
 
-            //Joystick.ButtonEvent[GamepadButtonFlags.DPadLeft] = GetJoystick2;
+            Joystick.ButtonEvent[GamepadButtonFlags.DPadRight] = RotateRight;
+            Joystick.ButtonEvent[GamepadButtonFlags.DPadLeft] = RotateLeft;
+
+            Joystick.ButtonEvent[GamepadButtonFlags.DPadUp] = ArmUp;
+            Joystick.ButtonEvent[GamepadButtonFlags.DPadDown] = ArmDown;
+
 
 
             // Mobile Def. start
-            OmniRobot.PortOpen("COM5");
+            //OmniRobot.PortOpen("COM6"); // MiniPC
+            OmniRobot.PortOpen("COM5"); // laptop 
             OmniRobot.VelocityControlMode(id);
             OmniRobot.TorqueEnable(id);
 
@@ -136,11 +148,11 @@ namespace RobotController
             CRANE_X7[1, 7].lInit.Set = new float[3] { 0.02f, 0, 0 };
             CRANE_X7[1, 7].axisInit.SetUnitVectorX(-1);
 
-            CRANE_X7[1, 0].JointRange[0] = CRANE_X7_DXL.DyAngle2rad4servo(300);
-            CRANE_X7[1, 0].JointRange[1] = CRANE_X7_DXL.DyAngle2rad4servo(3800);
+            CRANE_X7[1, 0].JointRange[0] = CRANE_X7_DXL.DyAngle2rad4servo(1024);
+            CRANE_X7[1, 0].JointRange[1] = CRANE_X7_DXL.DyAngle2rad4servo(3073);
 
             CRANE_X7[1, 1].JointRange[0] = CRANE_X7_DXL.DyAngle2rad4servo(1024);
-            CRANE_X7[1, 1].JointRange[1] = CRANE_X7_DXL.DyAngle2rad4servo(3072);
+            CRANE_X7[1, 1].JointRange[1] = CRANE_X7_DXL.DyAngle2rad4servo(2048);
 
             CRANE_X7[1, 2].JointRange[0] = CRANE_X7_DXL.DyAngle2rad4servo(300);
             CRANE_X7[1, 2].JointRange[1] = CRANE_X7_DXL.DyAngle2rad4servo(3800);
@@ -240,11 +252,17 @@ namespace RobotController
             TargetPosByJoystick[1] = HomeEoEPos[1];
             TargetPosByJoystick[2] = HomeEoEPos[2];
 
+            CRANE_X7_Initialize();
+
+            Parallel.RunEndless(Joystick.GetJoystick, 50);
             Parallel.RunEndless(DyWritePos, 50);
             Parallel.RunEndless(SetTargetByJoystick, 50);
-            //Parallel.RunEndless(SetMobileTargetByJoystick, 50);
-            Parallel.RunEndless(Joystick.GetJoystick, 50);
+            Parallel.RunEndless(SetMobileTargetByJoystick, 50);
+
             //Parallel.RunEndless(CheckCol, 50);
+            //Parallel.RunEndless(RotateRight, 50);
+            //Parallel.RunEndless(RotateLeft, 50);
+
 
         }
 
@@ -278,7 +296,7 @@ namespace RobotController
 
                     CRANE_X7_DXL.TorqueEnable(ID0209);
 
-                    CloseGripper();
+                    CloseGripperFull();
 
                     TorqueON = true;
 
@@ -291,7 +309,7 @@ namespace RobotController
                 {
                     OpenPort.IsEnabled = false;
 
-                    CloseGripper();
+                    CloseGripperFull();
 
                     CRANE_X7_DXL.TorqueDisable(ID0209);
                     CRANE_X7_DXL.PortClose();
@@ -305,6 +323,46 @@ namespace RobotController
                 }
             }
             else { Console.WriteLine("Please select the PORT first"); }
+        }
+
+        private void CRANE_X7_Initialize()
+        {
+            CRANE_X7_DXL.PortOpen(CRANE_X7_Port);
+            CRANE_X7_DXL.PositionControlMode(ID0209);
+            CRANE_X7_DXL.TorqueEnable(ID0209);
+
+            CloseGripperFull();
+
+            if (CraneX7Connected == true)
+            {
+                CRANE_X7_DXL.RequestPositionReply(ID0209);
+                int[] CurrPos = CRANE_X7_DXL.Position(ID0209);
+            }
+
+            CRANE_X7.Kinematics.Target[1].Position[0] = HomeEoEPos[0];
+            CRANE_X7.Kinematics.Target[1].Position[1] = HomeEoEPos[1];
+            CRANE_X7.Kinematics.Target[1].Position[2] = HomeEoEPos[2];
+
+            CRANE_X7.Kinematics.InverseKinematics();
+
+            CRANE_X7.Trajectory.SetNode(1, 0);
+            CRANE_X7.Trajectory.GetNode(0);
+
+            for (byte i = 0; i < ID0209.Length - 1; i++)
+            {
+                angles[i] = (int)CRANE_X7_DXL.rad2DyAngle4servo(CRANE_X7[1, i].q);
+            }
+
+            CRANE_X7.Trajectory.ProceedInboundLine();
+            CRANE_X7.Trajectory.SpeedRatio = 1;
+
+            Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
+
+            CRANE_X7_DXL.WritePosition(ID0209, angles);
+
+            TorqueON = true;
+            CraneX7Connected = true;
+            DyWrPoSW = true;
         }
 
         public void DyWritePos()
@@ -374,9 +432,10 @@ namespace RobotController
             //CurrentEoEPos[1] = TargetPosByJoystick[1] - HomeEoEPos[1];
             //CurrentEoEPos[2] = TargetPosByJoystick[2] - HomeEoEPos[2];
 
-            TargetPosByJoystick[0] = TargetPosByJoystick[0] + (float)map(Joystick.Data.LeftThumbX, -32768, 32767, 0.03, -0.03);
-            TargetPosByJoystick[1] = TargetPosByJoystick[1] + (float)map(Joystick.Data.LeftThumbY, -32768, 32767, 0.03, -0.03);
-            TargetPosByJoystick[2] = TargetPosByJoystick[2] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, -0.03, 0.03);
+            TargetPosByJoystick[0] = TargetPosByJoystick[0] + (float)map(Joystick.Data.RightThumbX, -32768, 32767, 0.01, -0.01);
+            TargetPosByJoystick[1] = TargetPosByJoystick[1] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, 0.01, -0.01);
+            //TargetPosByJoystick[2] = TargetPosByJoystick[2] + (float)map(Joystick.Data.RightThumbY, -32768, 32767, -0.01, 0.01);
+            TargetPosByJoystick[2] = TargetPosByJoystick[2];
 
             //float normSq = (TargetPosByJoystick[0] * TargetPosByJoystick[0]) + (TargetPosByJoystick[1] * TargetPosByJoystick[1]) + (TargetPosByJoystick[2] * TargetPosByJoystick[2]);
 
@@ -394,7 +453,7 @@ namespace RobotController
             //}
             //else
             //{
-            ClampedTarget = ClampTarget(TargetPosByJoystick, 0.8);
+            ClampedTarget = ClampTarget(TargetPosByJoystick, 1);
 
             CRANE_X7.Kinematics.Target[1].Position[0] = ClampedTarget[0];
             CRANE_X7.Kinematics.Target[1].Position[1] = ClampedTarget[1];
@@ -424,17 +483,62 @@ namespace RobotController
 
         public void SetMobileTargetByJoystick()
         {
-            TargetOdom[0] = map(Joystick.Data.LeftThumbY, -32768, 32767, -0.3, 0.3);
-            TargetOdom[1] = map(Joystick.Data.LeftThumbX, -32768, 32767, 0.3, -0.3);
-            TargetOdom[2] = map(Joystick.Data.RightThumbX, -32768, 32767, -0.3, 0.3);
+            if (MoveMobileManual == true)
+            {
+
+                TargetOdom[0] = map(Joystick.Data.LeftThumbY, -32768, 32767, -0.5, 0.5);
+                TargetOdom[1] = map(Joystick.Data.LeftThumbX, -32768, 32767, 0.5, -0.5);
+                TargetOdom[2] = 0;
+
+                if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
+                if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
+                if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
+
+                Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
+            }
+
+
+            //Console.WriteLine(TargetOdom[0]);
+        }
+
+        public void RotateRight()
+        {
+            MoveMobileManual = false;
+
+            TargetOdom[0] = 0;
+            TargetOdom[1] = 0;
+            TargetOdom[2] = 0.5;
 
             if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
             if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
             if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
 
             Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
+        }
 
-            //Console.WriteLine(TargetOdom[0]);
+        public void RotateLeft()
+        {
+            MoveMobileManual = false;
+
+            TargetOdom[0] = 0;
+            TargetOdom[1] = 0;
+            TargetOdom[2] = -0.5;
+
+            if (TargetOdom[0] < 0.1 && TargetOdom[0] > -0.1) TargetOdom[0] = 0;
+            if (TargetOdom[1] < 0.1 && TargetOdom[1] > -0.1) TargetOdom[1] = 0;
+            if (TargetOdom[2] < 0.1 && TargetOdom[2] > -0.1) TargetOdom[2] = 0;
+
+            Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
+        }
+
+        public void ArmUp()
+        {
+            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] + 0.005);
+        }
+
+        public void ArmDown()
+        {
+            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] - 0.005);
         }
 
         public void OpenGripper()
@@ -442,10 +546,16 @@ namespace RobotController
             CRANE_X7_DXL.WritePosition(ID0209[7], (int)CRANE_X7_DXL.rad2DyAngle4servo(1));
         }
 
-        public void CloseGripper()
+        public void CloseGripperFull()
         {
-            CRANE_X7_DXL.WritePosition(ID0209[7], (int)CRANE_X7_DXL.rad2DyAngle4servo(0));
+            CRANE_X7_DXL.WritePosition(ID0209[7], 2048);
         }
+
+        public void CloseGripperBall()
+        {
+            CRANE_X7_DXL.WritePosition(ID0209[7], 2350);
+        }
+
 
         public void TorqueOn()
         {
@@ -470,7 +580,7 @@ namespace RobotController
             elbowPosition[1] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[1];
             elbowPosition[2] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[2];
 
-            if (normSq > (dSclamp * dSclamp) || dS[1] >= (float)-0.25 )
+            if (normSq > (dSclamp * dSclamp) || dS[1] >= (float)-0.25)
             {
                 //float factor = (float)(dSclamp / Math.Sqrt(normSq));
 
@@ -492,11 +602,12 @@ namespace RobotController
 
                 //Console.WriteLine(factor);
 
-                TargetOdom[0] = map(Joystick.Data.LeftThumbY, -32768, 32767, -0.5, 0.5);
-                TargetOdom[1] = map(Joystick.Data.LeftThumbX, -32768, 32767, 0.5, -0.5);
-                TargetOdom[2] = map(Joystick.Data.RightThumbX, -32768, 32767, -0.5, 0.5);
+                //TargetOdom[0] = map(Joystick.Data.RightThumbY, -32768, 32767, -0.5, 0.5);
+                //TargetOdom[1] = map(Joystick.Data.RightThumbX, -32768, 32767, 0.5, -0.5);
+                ////TargetOdom[2] = map(Joystick.Data.RightThumbX, -32768, 32767, -0.3, 0.3);
+                //TargetOdom[2] = 0;
 
-                Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
+                //Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
 
             }
             else
@@ -510,11 +621,13 @@ namespace RobotController
                 dT[1] = dS[1];
                 dT[2] = dS[2];
 
-                TargetOdom[0] = 0;
-                TargetOdom[1] = 0;
-                TargetOdom[2] = 0;
+                MoveMobileManual = true;
 
-                Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
+                //TargetOdom[0] = 0;
+                //TargetOdom[1] = 0;
+                //TargetOdom[2] = 0;
+
+                //Mobile.Omnidirectional.Move(OmniRobot, id, 1000000, TargetOdom);
             }
 
             if (normSq < (dSclamp * dSclamp))
@@ -563,7 +676,7 @@ namespace RobotController
             CRANE_X7.Kinematics.ResetHomePosition();
             CRANE_X7.Kinematics.ForwardKinematics();
 
-            CloseGripper();
+            CloseGripperFull();
 
             //CRANE_X7.Kinematics.Chain[1].pe.ConsoleWrite();
             // CRANE_X7.Kinematics.Chain[1].Re.ConsoleWrite();
