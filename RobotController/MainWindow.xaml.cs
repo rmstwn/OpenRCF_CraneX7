@@ -55,16 +55,17 @@ namespace RobotController
 
         float[] dTTemp = new float[3];
 
-        Cuboid Cuboid = new Cuboid();
+        //Cuboid Cuboid = new Cuboid(0.25f * 2, 0.25f * 2, 0.32f * 2);
+
+        float[] elbowPosition = new float[3];
 
         public MainWindow()
         {
             InitializeComponent();
             Loaded += InitializeOpenRCF;
 
-            float[] elbowPosition = new float[3];
-            Cuboid.IsCollision(elbowPosition, 0.08f);
-
+            //Cuboid.Position[1] = 0.31f;
+            //Cuboid.Position[2] = 0.31f;
 
             Joystick.ButtonEvent[GamepadButtonFlags.A] = TorqueOn;
             Joystick.ButtonEvent[GamepadButtonFlags.Y] = TorqueOff;
@@ -243,6 +244,7 @@ namespace RobotController
             Parallel.RunEndless(SetTargetByJoystick, 50);
             //Parallel.RunEndless(SetMobileTargetByJoystick, 50);
             Parallel.RunEndless(Joystick.GetJoystick, 50);
+            //Parallel.RunEndless(CheckCol, 50);
 
         }
 
@@ -257,6 +259,7 @@ namespace RobotController
         private void Draw()
         {
             CRANE_X7.Draw();
+            //Cuboid.Draw();
         }
 
         private void OpenPort_Click(object sender, RoutedEventArgs e)
@@ -397,7 +400,7 @@ namespace RobotController
             CRANE_X7.Kinematics.Target[1].Position[1] = ClampedTarget[1];
             CRANE_X7.Kinematics.Target[1].Position[2] = ClampedTarget[2];
 
-            //Console.Write("{0}, {1}, {2} || ", ClampedTarget[0], ClampedTarget[1], ClampedTarget[2]);
+            //Console.WriteLine("{0}, {1}, {2} || ", ClampedTarget[0], ClampedTarget[1], ClampedTarget[2]);
             //Console.WriteLine("{0}, {1}, {2}", TargetPosByJoystick[0], TargetPosByJoystick[1], TargetPosByJoystick[2]);
 
             CRANE_X7.Kinematics.InverseKinematics();
@@ -461,23 +464,31 @@ namespace RobotController
         public float[] ClampTarget(float[] dS, double dSclamp)
         {
             float[] dT = new float[3];
-
             float normSq = (dS[0] * dS[0]) + (dS[1] * dS[1]) + (dS[2] * dS[2]);
 
-            if (normSq > (dSclamp * dSclamp))
+            elbowPosition[0] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[0];
+            elbowPosition[1] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[1];
+            elbowPosition[2] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[2];
+
+            if (normSq > (dSclamp * dSclamp) || dS[1] >= (float)-0.25 )
             {
-                float factor = (float)(dSclamp / Math.Sqrt(normSq));
+                //float factor = (float)(dSclamp / Math.Sqrt(normSq));
 
-                if (normSq > (dSclamp * dSclamp))
-                {
-                    dS[0] = dTTemp[0];
-                    dS[1] = dTTemp[1];
-                    dS[2] = dTTemp[2];
-                }
+                //if (normSq > (dSclamp * dSclamp))
+                //{
 
-                dT[0] = dS[0] * factor;
-                dT[1] = dS[1] * factor;
-                dT[2] = dS[2] * factor;
+                dS[0] = dTTemp[0];
+                dS[1] = dTTemp[1];
+                dS[2] = dTTemp[2];
+                //}
+
+                //dT[0] = dS[0] * factor;
+                //dT[1] = dS[1] * factor;
+                //dT[2] = dS[2] * factor;
+
+                dT[0] = dS[0];
+                dT[1] = dS[1];
+                dT[2] = dS[2];
 
                 //Console.WriteLine(factor);
 
@@ -490,6 +501,11 @@ namespace RobotController
             }
             else
             {
+                if (dS[1] > -0.25)
+                {
+                    dS[1] = (float)-0.25;
+                }
+
                 dT[0] = dS[0];
                 dT[1] = dS[1];
                 dT[2] = dS[2];
@@ -503,12 +519,36 @@ namespace RobotController
 
             if (normSq < (dSclamp * dSclamp))
             {
+                if (dS[1] > -0.25)
+                {
+                    dS[1] = (float)-0.25;
+                }
+
+                if (elbowPosition[1] >= -0.01f)
+                {
+                    dS[0] = CRANE_X7.Kinematics.Chain[1].pe[0];
+                    dS[1] = CRANE_X7.Kinematics.Chain[1].pe[1];
+                    dS[2] = CRANE_X7.Kinematics.Chain[1].pe[2];
+                }
+
                 dTTemp[0] = dS[0];
                 dTTemp[1] = dS[1];
                 dTTemp[2] = dS[2];
             }
 
+            Console.WriteLine("{0}, {1}, {2} ", elbowPosition[0], elbowPosition[1], elbowPosition[2]);
+
             return dT;
+        }
+
+        public void CheckCol()
+        {
+
+            elbowPosition[0] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[0];
+            elbowPosition[1] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[1];
+            elbowPosition[2] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[2];
+
+            Console.WriteLine("{0}, {1}, {2} || ", elbowPosition[0], elbowPosition[1], elbowPosition[2]);
         }
 
         public static double map(double x, double in_min, double in_max, double out_min, double out_max)
