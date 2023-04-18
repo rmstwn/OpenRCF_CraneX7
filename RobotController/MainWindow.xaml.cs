@@ -348,15 +348,18 @@ namespace RobotController
             CRANE_X7.Trajectory.SetNode(1, 0);
             CRANE_X7.Trajectory.GetNode(0);
 
+            for (byte i = 0; i < ID0209.Length - 1; i++) { 
+            
+            }
             for (byte i = 0; i < ID0209.Length - 1; i++)
             {
                 angles[i] = (int)CRANE_X7_DXL.rad2DyAngle4servo(CRANE_X7[1, i].q);
             }
 
-            CRANE_X7.Trajectory.ProceedInboundLine();
-            CRANE_X7.Trajectory.SpeedRatio = 1;
+            //CRANE_X7.Trajectory.ProceedInboundLine();
+            //CRANE_X7.Trajectory.SpeedRatio = 1;
 
-            Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
+            //Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
 
             CRANE_X7_DXL.WritePosition(ID0209, angles);
 
@@ -533,12 +536,12 @@ namespace RobotController
 
         public void ArmUp()
         {
-            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] + 0.005);
+            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] + 0.003);
         }
 
         public void ArmDown()
         {
-            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] - 0.005);
+            TargetPosByJoystick[2] = (float)(TargetPosByJoystick[2] - 0.003);
         }
 
         public void OpenGripper()
@@ -654,16 +657,6 @@ namespace RobotController
             return dT;
         }
 
-        public void CheckCol()
-        {
-
-            elbowPosition[0] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[0];
-            elbowPosition[1] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[1];
-            elbowPosition[2] = CRANE_X7.Kinematics.Chain[1].Pair[3].pt[2];
-
-            Console.WriteLine("{0}, {1}, {2} || ", elbowPosition[0], elbowPosition[1], elbowPosition[2]);
-        }
-
         public static double map(double x, double in_min, double in_max, double out_min, double out_max)
         {
             if (x == 128) return 0;
@@ -673,10 +666,10 @@ namespace RobotController
         private void Button1_Click(object sender, RoutedEventArgs e)
         {
             //thread1.Start();
-            CRANE_X7.Kinematics.ResetHomePosition();
-            CRANE_X7.Kinematics.ForwardKinematics();
+            //CRANE_X7.Kinematics.ResetHomePosition();
+            //CRANE_X7.Kinematics.ForwardKinematics();
 
-            CloseGripperFull();
+            //CloseGripperFull();
 
             //CRANE_X7.Kinematics.Chain[1].pe.ConsoleWrite();
             // CRANE_X7.Kinematics.Chain[1].Re.ConsoleWrite();
@@ -684,47 +677,47 @@ namespace RobotController
 
         private void Button2_Click(object sender, RoutedEventArgs e)
         {
-            CRANE_X7.Kinematics.Target[1].Position[0] = 0f;
-            CRANE_X7.Kinematics.Target[1].Position[1] = -0.6f;
-            CRANE_X7.Kinematics.Target[1].Position[2] = 0.6f;
-            //CRANEX7.Kinematics.Target[1].Rotate.SetRy(0.5*Math.PI);
+            //CRANE_X7.Kinematics.Target[1].Position[0] = 0f;
+            //CRANE_X7.Kinematics.Target[1].Position[1] = -0.6f;
+            //CRANE_X7.Kinematics.Target[1].Position[2] = 0.6f;
+            ////CRANEX7.Kinematics.Target[1].Rotate.SetRy(0.5*Math.PI);
 
-            CRANE_X7.Kinematics.InverseKinematics();
+            //CRANE_X7.Kinematics.InverseKinematics();
 
-            CRANE_X7.Trajectory.SetNode(1, 0);
-            CRANE_X7.Trajectory.GetNode(0);
+            //CRANE_X7.Trajectory.SetNode(1, 0);
+            //CRANE_X7.Trajectory.GetNode(0);
         }
 
         private void Button3_Click(object sender, RoutedEventArgs e)
         {
-            DyWrPoSW = true;
+            //DyWrPoSW = true;
 
-            CRANE_X7.Trajectory.ProceedOutboundLine();
-            CRANE_X7.Trajectory.SpeedRatio = 1;
+            //CRANE_X7.Trajectory.ProceedOutboundLine();
+            //CRANE_X7.Trajectory.SpeedRatio = 1;
 
-            Parallel.Run(CRANE_X7.Trajectory.ProceedOutboundLine, 50);
+            //Parallel.Run(CRANE_X7.Trajectory.ProceedOutboundLine, 50);
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
         {
-            CRANE_X7.Trajectory.ProceedInboundLine();
-            CRANE_X7.Trajectory.SpeedRatio = 1;
+            //CRANE_X7.Trajectory.ProceedInboundLine();
+            //CRANE_X7.Trajectory.SpeedRatio = 1;
 
-            Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
+            //Parallel.Run(CRANE_X7.Trajectory.ProceedInboundLine, 50);
         }
 
         private void Button5_Click(object sender, RoutedEventArgs e)
         {
-            DyWrPoSW = true;
-            CRANE_X7_DXL.TorqueEnable(ID0209);
-            TorqueON = true;
+        //    DyWrPoSW = true;
+        //    CRANE_X7_DXL.TorqueEnable(ID0209);
+        //    TorqueON = true;
         }
 
         private void Button6_Click(object sender, RoutedEventArgs e)
         {
-            DyWrPoSW = false;
-            CRANE_X7_DXL.TorqueDisable(ID0209);
-            TorqueON = false;
+            //DyWrPoSW = false;
+            //CRANE_X7_DXL.TorqueDisable(ID0209);
+            //TorqueON = false;
         }
     }
 }
